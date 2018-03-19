@@ -12,7 +12,7 @@ setup(name='azure_chestxray_cam',
       license='MIT',
       install_requires=['keras'],
       classifiers=[
-                   '',
+                   ''
                   ]
-                   ],
+                   ,
       packages=find_packages())
