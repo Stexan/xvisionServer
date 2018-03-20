@@ -14,7 +14,7 @@ def add_path_to_sys_path(path_to_append):
         sys.path.append(path_to_append)
 [add_path_to_sys_path(crt_path) for crt_path in paths_to_append]
 
-import azure_chestxray_utils.azure_chestxray_utils as azure_chestxray_utils
+import azureUtils.azure_chestxray_utils as azure_chestxray_utils
 
 
 def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
@@ -51,7 +51,7 @@ def process_cam_image(crt_cam_image, xray_image, crt_alpha = .5):
 
     # make cam an rgb image
     empty_image_channel = np.zeros(dtype = np.float32, shape = crt_cam_image.shape[:2])
-    crt_cam_image = cv2.merge((crt_cam_image,empty_image_channel,empty_image_channel))
+    crt_cam_image = cv2.merge((empty_image_channel,empty_image_channel,crt_cam_image))
     
     blended_image = cv2.addWeighted(xray_image.astype('uint8'),crt_alpha,\
                                     crt_cam_image.astype('uint8'),(1-crt_alpha),0)
@@ -127,7 +127,7 @@ def process_xray_image(crt_xray_image, DenseNetImageNet121_model):
 #                    "{0:.1f}".format(likely_disease_prob)+ '% (weight ' +
 #                    "{0:.1f}".format(likely_disease_prob_ratio)+ '%)')
 
-    dict = {'predictions': crt_predictions, 'diseases': prj_consts.DISEASE_list, 'likelyIndex': predicted_disease_index, 'blendedImage': crt_blended_image, 'probabilities':probabilities, 'probabilityRatios': probabilityRatios}
+    dict = {'diseases': prj_consts.DISEASE_list, 'likelyIndex': predicted_disease_index, 'blendedImage': crt_blended_image, 'probabilities':probabilities, 'probabilityRatios': probabilityRatios}
     return dict
 
 def process_nih_data(crt_image, editedPath, DenseNetImageNet121_model):
