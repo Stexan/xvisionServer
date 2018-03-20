@@ -4,7 +4,7 @@ from setuptools import find_packages
 
 
 setup(name='azure_chestxray_cam',
-      version='1',
+      version='1.0.0',
       description='Package 1',
       author='Stefan Iarca',
       author_email='iasotm@yahoo.com',
