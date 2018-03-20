@@ -1,9 +1,8 @@
-
 from setuptools import setup
 from setuptools import find_packages
 
 
-setup(name='azure_chestxray_cam',
+setup(name='azureUtils',
       version='1.0.0',
       description='Package 1',
       author='Stefan Iarca',
@@ -15,4 +14,4 @@ setup(name='azure_chestxray_cam',
                    ''
                   ]
                    ,
-      packages=['azure_chestxray_cam'])
+      packages=['azureUtils'])
