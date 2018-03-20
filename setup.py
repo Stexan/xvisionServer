@@ -15,4 +15,4 @@ setup(name='azure_chestxray_cam',
                    ''
                   ]
                    ,
-      packages=find_packages())
+      packages=['azure_chestxray_cam'])
