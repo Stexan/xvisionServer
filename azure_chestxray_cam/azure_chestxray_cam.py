@@ -14,7 +14,7 @@ def add_path_to_sys_path(path_to_append):
         sys.path.append(path_to_append)
 [add_path_to_sys_path(crt_path) for crt_path in paths_to_append]
 
-import azure_chestxray_utils
+import azure_chestxray_utils.azure_chestxray_utils as azure_chestxray_utils
 
 
 def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
