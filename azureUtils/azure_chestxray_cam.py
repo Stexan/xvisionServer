@@ -46,7 +46,6 @@ def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
 def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
     xray_image = cv2.imread(originalPath)
     im_height, im_width, _ = xray_image.shape
-
     
     crt_cam_image /= np.max(crt_cam_image)
     crt_cam_image = cv2.resize(crt_cam_image, (im_width, im_height))
@@ -58,6 +57,8 @@ def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
     #heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
     
     print(originalPath)
+    print(heatmap.shape)
+    print(xray_image.shape)
     
     blendedImage = cv2.addWeighted(xray_image.astype('uint8'),0.8,\
                                    heatmap.astype('uint8'),(1-crt_alpha),0)
