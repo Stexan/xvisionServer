@@ -20,42 +20,45 @@ import azureUtils.azure_chestxray_utils as azure_chestxray_utils
 def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
 # based on https://github.com/jacobgil/keras-cam/blob/master/cam.py
     width, height, _ = cv2_input_image.shape
+
     class_weights = DenseNetImageNet121_model.layers[-1].get_weights()[0]
     final_conv_layer = DenseNetImageNet121_model.layers[-3]
-    get_output = K.function([DenseNetImageNet121_model.layers[0].input], 
+    get_output = K.function([DenseNetImageNet121_model.layers[0].input],
                             [final_conv_layer.output, \
                              DenseNetImageNet121_model.layers[-1].output])
     [conv_outputs, prediction] = get_output([cv2_input_image[None,:,:,:]])
     conv_outputs = conv_outputs[0, :, :, :]
     prediction = prediction[0,:]
-    
+
     #Create the class activation map.
     predicted_disease = np.argmax(prediction)
     cam = np.zeros(dtype = np.float32, shape = conv_outputs.shape[:2])
+    #cam = np.zeros(dtype = np.float32, shape = conv_outputs.shape[1:3])
+    print(conv_outputs.shape)
+    print(cam.shape)
+    print(class_weights.shape)
+    print(class_weights[:,predicted_disease].shape)
     for i, w in enumerate(class_weights[:, predicted_disease]):
-            cam += w * conv_outputs[:, :, i]
-    
+        cam += w * conv_outputs[:, :, i]
+
     return prediction, cam, predicted_disease
 
-
-def process_cam_image(crt_cam_image, xray_image, crt_alpha = .5):
+def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
+    xray_image = cv2.imread(originalPath)
     im_width, im_height, _ = xray_image.shape
-    crt_cam_image = cv2.resize(crt_cam_image, (im_width, im_height), \
-                               interpolation=cv2.INTER_CUBIC)
     
-#     do some gamma enhancement, e is too much
-    crt_cam_image = np.power(1.1, crt_cam_image)
-    crt_cam_image = azure_chestxray_utils.normalize_nd_array(crt_cam_image)
-    # crt_cam_image[np.where(crt_cam_image < 0.5)] = 0 
-    crt_cam_image = 255*crt_cam_image
-
-    # make cam an rgb image
-    empty_image_channel = np.zeros(dtype = np.float32, shape = crt_cam_image.shape[:2])
-    crt_cam_image = cv2.merge((empty_image_channel,empty_image_channel,crt_cam_image))
+    crt_cam_image /= np.max(crt_cam_image)
+    crt_cam_image = cv2.resize(crt_cam_image, (im_width, im_height))
     
-    blended_image = cv2.addWeighted(xray_image.astype('uint8'),crt_alpha,\
-                                    crt_cam_image.astype('uint8'),(1-crt_alpha),0)
-    return(blended_image)
+    heatmap = cv2.applyColorMap(np.uint8(255*crt_cam_image), cv2.COLORMAP_JET)
+    heatmap[np.where(crt_cam_image < 0.2)] = 0
+    
+    #heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+    
+    blendedImage = cv2.addWeighted(xray_image.astype('uint8'),0.8,\
+                                   heatmap.astype('uint8'),(1-crt_alpha),0)
+                                   
+    return (blendedImage)
 
 def plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image, map_caption):
     import matplotlib.pyplot as plt
@@ -92,7 +95,7 @@ def plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image, map_capti
     
 
     
-def process_xray_image(crt_xray_image, DenseNetImageNet121_model):
+def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalPath):
 
 #     print(crt_xray_image.shape)
     crt_xray_image = azure_chestxray_utils.normalize_nd_array(crt_xray_image)
@@ -121,7 +124,7 @@ def process_xray_image(crt_xray_image, DenseNetImageNet121_model):
         probabilities.append(likely_disease_prob)
         probabilityRatios.append(likely_disease_prob_ratio)
     
-    crt_blended_image = process_cam_image(crt_cam_image, crt_xray_image)
+    crt_blended_image = process_cam_image(crt_cam_image, , originalPath)
 #    plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image,
 #                    str(likely_disease)+ ' ' +
 #                    "{0:.1f}".format(likely_disease_prob)+ '% (weight ' +
@@ -139,7 +142,7 @@ def process_nih_data(crt_image, editedPath, DenseNetImageNet121_model):
                                  prj_consts.CHESTXRAY_MODEL_EXPECTED_IMAGE_WIDTH)) \
                     .astype(np.float32)
 
-    resultDict = process_xray_image(crt_xray_image, DenseNetImageNet121_model )
+    resultDict = process_xray_image(crt_xray_image, DenseNetImageNet121_model, crt_image )
     blendedImage = resultDict['blendedImage']
 
     cv2.imwrite(editedPath, blendedImage)
