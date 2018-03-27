@@ -55,6 +55,10 @@ def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
     
     #heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
     
+    print(originalPath)
+    print(xray_image)
+    print(heatmap)
+    
     blendedImage = cv2.addWeighted(xray_image.astype('uint8'),0.8,\
                                    heatmap.astype('uint8'),(1-crt_alpha),0)
                                    
