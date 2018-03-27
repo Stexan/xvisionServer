@@ -124,7 +124,7 @@ def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalPath):
         probabilities.append(likely_disease_prob)
         probabilityRatios.append(likely_disease_prob_ratio)
     
-    crt_blended_image = process_cam_image(crt_cam_image, , originalPath)
+    crt_blended_image = process_cam_image(crt_cam_image, originalPath)
 #    plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image,
 #                    str(likely_disease)+ ' ' +
 #                    "{0:.1f}".format(likely_disease_prob)+ '% (weight ' +
@@ -152,9 +152,7 @@ def process_nih_data(crt_image, editedPath, DenseNetImageNet121_model):
 if __name__=="__main__":
     #FIXME
     # add example/test code here
-
-
-
+    
     NIH_annotated_Cardiomegaly = ['00005066_030.png']
     data_dir = ''
     cv2_image = cv2.imread(os.path.join(data_dir,NIH_annotated_Cardiomegaly[0]))
@@ -174,4 +172,4 @@ if __name__=="__main__":
           predictions[predicted_disease_index]/sum(predictions))
     blended_image = process_cam_image(cam_image, cv2_image)
     plot_cam_results(blended_image, cam_image, cv2_image, \
-                 prj_consts.DISEASE_list[predicted_disease_index])      
+                 prj_consts.DISEASE_list[predicted_disease_index])
