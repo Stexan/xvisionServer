@@ -38,6 +38,7 @@ def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
     print(cam.shape)
     print(class_weights.shape)
     print(class_weights[:,predicted_disease].shape)
+    
     for i, w in enumerate(class_weights[:, predicted_disease]):
         cam += w * conv_outputs[:, :, i]
 
@@ -59,7 +60,7 @@ def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
     print(originalPath)
     print(heatmap.shape)
     print(xray_image.shape)
-    
+    print(crt_cam_image.shape)
     blendedImage = cv2.addWeighted(xray_image.astype('uint8'),0.8,\
                                    heatmap.astype('uint8'),(1-crt_alpha),0)
                                    
