@@ -22,7 +22,8 @@ def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
     width, height, _ = cv2_input_image.shape
 
     class_weights = DenseNetImageNet121_model.layers[-1].get_weights()[0]
-    final_conv_layer = DenseNetImageNet121_model.layers[-3]
+    #layer -3 without dropout
+    final_conv_layer = DenseNetImageNet121_model.layers[-4]
     get_output = K.function([DenseNetImageNet121_model.layers[0].input],
                             [final_conv_layer.output, \
                              DenseNetImageNet121_model.layers[-1].output])
@@ -44,8 +45,8 @@ def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
 
     return prediction, cam, predicted_disease
 
-def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
-    xray_image = cv2.imread(originalPath)
+def process_cam_image(crt_cam_image, originalImage, crt_alpha = .6):
+    xray_image = originalImage
     im_height, im_width, _ = xray_image.shape
     
     crt_cam_image /= np.max(crt_cam_image)
@@ -57,7 +58,6 @@ def process_cam_image(crt_cam_image, originalPath, crt_alpha = .6):
 
     #heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
     
-    print(originalPath)
     print(heatmap.shape)
     print(xray_image.shape)
     print(crt_cam_image.shape)
@@ -99,14 +99,25 @@ def plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image, map_capti
     image_as_BytesIO.seek(0)
     return(image_as_BytesIO)
     
+def normalize(crt_array):
+    crt_array /= 255.
 
+    mean = [0.485, 0.456, 0. 406]
+    std = [0.229, 0.224, 0.225]
+
+    crt_array[..., 0] -= mean[2]
+    crt_array[..., 1] -= mean[1]
+    crt_array[..., 2] -= mean[0]
+
+    crt_array[..., 0] -= std[2]
+    crt_array[..., 1] -= std[1]
+    crt_array[..., 2] -= std[0]
+
+    return crt_array
     
-def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalPath):
+def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalImage):
 
-#     print(crt_xray_image.shape)
-    crt_xray_image = azure_chestxray_utils.normalize_nd_array(crt_xray_image)
-    crt_xray_image = 255*crt_xray_image
-    crt_xray_image=crt_xray_image.astype('uint8')
+    crt_xray_image=normalize(crt_xray_image)
 
     crt_predictions, crt_cam_image, predicted_disease_index = \
     get_score_and_cam_picture(crt_xray_image, 
@@ -130,7 +141,7 @@ def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalPath):
         probabilities.append(likely_disease_prob)
         probabilityRatios.append(likely_disease_prob_ratio)
     
-    crt_blended_image = process_cam_image(crt_cam_image, originalPath)
+    crt_blended_image = process_cam_image(crt_cam_image, originalImage)
 #    plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image,
 #                    str(likely_disease)+ ' ' +
 #                    "{0:.1f}".format(likely_disease_prob)+ '% (weight ' +
@@ -139,19 +150,15 @@ def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalPath):
     dict = {'diseases': prj_consts.DISEASE_list, 'likelyIndex': predicted_disease_index, 'blendedImage': crt_blended_image, 'probabilities':probabilities, 'probabilityRatios': probabilityRatios}
     return dict
 
-def process_nih_data(crt_image, editedPath, DenseNetImageNet121_model):
+def process_nih_data(crt_image, DenseNetImageNet121_model):
     prj_consts = azure_chestxray_utils.chestxray_consts()
     
-    crt_xray_image = cv2.imread(crt_image)
-    crt_xray_image = cv2.resize(crt_xray_image,
+    crt_xray_image = cv2.resize(crt_image,
                                 (prj_consts.CHESTXRAY_MODEL_EXPECTED_IMAGE_HEIGHT,
                                  prj_consts.CHESTXRAY_MODEL_EXPECTED_IMAGE_WIDTH)) \
                     .astype(np.float32)
 
-    resultDict = process_xray_image(crt_xray_image, DenseNetImageNet121_model, crt_image )
-    blendedImage = resultDict['blendedImage']
-
-    cv2.imwrite(editedPath, blendedImage)
+    resultDict = process_xray_image(crt_xray_image, DenseNetImageNet121_model, crt_image)
 
     return resultDict
         

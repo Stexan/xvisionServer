@@ -25,7 +25,8 @@ def build_model(crt_densenet_function):
                                      pooling='avg')
 
     x = base_model.output
-    predictions = Dense(14, activation='sigmoid')(x)
+    dropout = Dropout(0.1)(x)
+    predictions = Dense(14, activation='sigmoid')(dropout)
     model = Model(inputs=base_model.input, outputs=predictions)
     return model
 
