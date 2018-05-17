@@ -1,6 +1,6 @@
 ### Copyright (C) Microsoft Corporation.  
 
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 from keras.models import Model
 from keras_contrib.applications.densenet import DenseNetImageNet121
 import keras_contrib
