@@ -102,7 +102,7 @@ def plot_cam_results(crt_blended_image, crt_cam_image, crt_xray_image, map_capti
 def normalize(crt_array):
     crt_array /= 255.
 
-    mean = [0.485, 0.456, 0. 406]
+    mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
 
     crt_array[..., 0] -= mean[2]
