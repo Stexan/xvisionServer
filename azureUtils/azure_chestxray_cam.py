@@ -109,9 +109,9 @@ def normalize(crt_array):
     crt_array[..., 1] -= mean[1]
     crt_array[..., 2] -= mean[0]
 
-    crt_array[..., 0] -= std[2]
-    crt_array[..., 1] -= std[1]
-    crt_array[..., 2] -= std[0]
+    crt_array[..., 0] /= std[2]
+    crt_array[..., 1] /= std[1]
+    crt_array[..., 2] /= std[0]
 
     return crt_array
     
