@@ -3,7 +3,7 @@
 import keras.backend as K
 import sys, os, io
 import numpy as np
-import cv3 as cv2
+import cv2
 
 import matplotlib
 matplotlib.use('agg')
