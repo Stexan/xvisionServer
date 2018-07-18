@@ -16,8 +16,7 @@ def add_path_to_sys_path(path_to_append):
 
 import azureUtils.azure_chestxray_utils as azure_chestxray_utils
 
-
-def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
+def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model, specificHeatmap):
 # based on https://github.com/jacobgil/keras-cam/blob/master/cam.py
     width, height, _ = cv2_input_image.shape
 
@@ -33,6 +32,8 @@ def get_score_and_cam_picture(cv2_input_image, DenseNetImageNet121_model):
 
     #Create the class activation map.
     predicted_disease = np.argmax(prediction)
+    if specificHeatmap != -1:
+        predicted_disease = specificHeatmap
     cam = np.zeros(dtype = np.float32, shape = conv_outputs.shape[:2])
     #cam = np.zeros(dtype = np.float32, shape = conv_outputs.shape[1:3])
     print(conv_outputs.shape)
@@ -115,13 +116,13 @@ def normalize(crt_array):
 
     return crt_array
     
-def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalImage):
+def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalImage, specificHeatmap):
 
     crt_xray_image=normalize(crt_xray_image)
 
     crt_predictions, crt_cam_image, predicted_disease_index = \
     get_score_and_cam_picture(crt_xray_image, 
-                              DenseNetImageNet121_model)
+                              DenseNetImageNet121_model, specificHeatmap)
     
     prj_consts = azure_chestxray_utils.chestxray_consts()
     likely_disease=prj_consts.DISEASE_list[predicted_disease_index]
@@ -150,7 +151,7 @@ def process_xray_image(crt_xray_image, DenseNetImageNet121_model, originalImage)
     dict = {'diseases': prj_consts.DISEASE_list, 'likelyIndex': predicted_disease_index, 'blendedImage': crt_blended_image, 'probabilities':probabilities, 'probabilityRatios': probabilityRatios}
     return dict
 
-def process_nih_data(crt_image, DenseNetImageNet121_model):
+def process_nih_data(crt_image, DenseNetImageNet121_model, specificHeatmap):
     prj_consts = azure_chestxray_utils.chestxray_consts()
     
     crt_xray_image = cv2.resize(crt_image,
@@ -158,7 +159,7 @@ def process_nih_data(crt_image, DenseNetImageNet121_model):
                                  prj_consts.CHESTXRAY_MODEL_EXPECTED_IMAGE_WIDTH)) \
                     .astype(np.float32)
 
-    resultDict = process_xray_image(crt_xray_image, DenseNetImageNet121_model, crt_image)
+    resultDict = process_xray_image(crt_xray_image, DenseNetImageNet121_model, crt_image, specificHeatmap)
 
     return resultDict
         
